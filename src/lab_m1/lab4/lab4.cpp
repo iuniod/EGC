@@ -34,6 +34,18 @@ void Lab4::Init()
     mesh->LoadMesh(PATH_JOIN(window->props.selfDir, RESOURCE_PATH::MODELS, "primitives"), "box.obj");
     meshes[mesh->GetMeshID()] = mesh;
 
+    Mesh*sun = new Mesh("sun");
+    sun->LoadMesh(PATH_JOIN(window->props.selfDir, RESOURCE_PATH::MODELS, "primitives"), "sphere.obj");
+    meshes[sun->GetMeshID()] = sun;
+
+    Mesh*earth = new Mesh("earth");
+    earth->LoadMesh(PATH_JOIN(window->props.selfDir, RESOURCE_PATH::MODELS, "primitives"), "sphere.obj");
+    meshes[earth->GetMeshID()] = earth;
+
+    Mesh*moon = new Mesh("moon");
+    moon->LoadMesh(PATH_JOIN(window->props.selfDir, RESOURCE_PATH::MODELS, "primitives"), "sphere.obj");
+    meshes[moon->GetMeshID()] = moon;
+
     // Initialize tx, ty and tz (the translation steps)
     translateX = 0;
     translateY = 0;
@@ -48,6 +60,11 @@ void Lab4::Init()
     angularStepOX = 0;
     angularStepOY = 0;
     angularStepOZ = 0;
+
+    // Initialize earth and moon angles
+    earthAngle = 0;
+    moonAngle = 0;
+    sunTranslation = 0;
 
     // Sets the resolution of the small viewport
     glm::ivec2 resolution = window->GetResolution();
@@ -78,6 +95,30 @@ void Lab4::RenderScene() {
     modelMatrix *= transform3D::RotateOY(angularStepOY);
     modelMatrix *= transform3D::RotateOZ(angularStepOZ);
     RenderMesh(meshes["box"], shaders["VertexNormal"], modelMatrix);
+
+    // Add sun
+    modelMatrix = glm::mat4(1);
+    modelMatrix *= transform3D::Translate(sunTranslation, 2, 0);
+    modelMatrix *= transform3D::Scale(0.5f, 0.5f, 0.5f);
+    RenderMesh(meshes["sun"], shaders["VertexNormal"], modelMatrix);
+
+    // Add earth
+    modelMatrix = glm::mat4(1);
+    modelMatrix *= transform3D::Translate(sunTranslation, 2, 0);
+    modelMatrix *= transform3D::RotateOY(earthAngle);
+    modelMatrix *= transform3D::Translate(1, 0.2f, 0);
+    modelMatrix *= transform3D::Scale(0.25f, 0.25f, 0.25f);
+    RenderMesh(meshes["earth"], shaders["VertexNormal"], modelMatrix);
+
+    // Add moon
+    modelMatrix = glm::mat4(1);
+    modelMatrix *= transform3D::Translate(sunTranslation, 2, 0);
+    modelMatrix *= transform3D::RotateOY(earthAngle);
+    modelMatrix *= transform3D::Translate(1, 0.2f, 0);
+    modelMatrix *= transform3D::RotateOY(moonAngle);
+    modelMatrix *= transform3D::Translate(0.5f, 0.2f, 0);
+    modelMatrix *= transform3D::Scale(0.1f, 0.1f, 0.1f);
+    RenderMesh(meshes["moon"], shaders["VertexNormal"], modelMatrix);
 }
 
 void Lab4::Update(float deltaTimeSeconds)
@@ -98,6 +139,12 @@ void Lab4::Update(float deltaTimeSeconds)
 
     // TODO(student): render the scene again, in the new viewport
     DrawCoordinateSystem();
+    RenderScene();
+
+    // Update earth and moon angles
+    earthAngle += deltaTimeSeconds;
+    moonAngle += deltaTimeSeconds * 2;
+    sunTranslation += deltaTimeSeconds * 0.25f;
 }
 
 void Lab4::FrameEnd()
@@ -114,6 +161,71 @@ void Lab4::FrameEnd()
 void Lab4::OnInputUpdate(float deltaTime, int mods)
 {
     // TODO(student): Add transformation logic
+
+    // Translate first cube
+    if (!window->MouseHold(GLFW_MOUSE_BUTTON_RIGHT)) {
+        if (window->KeyHold(GLFW_KEY_W)) {
+            translateZ -= deltaTime * 10;
+        }
+
+        if (window->KeyHold(GLFW_KEY_A)) {
+            translateX -= deltaTime * 10;
+        }
+
+        if (window->KeyHold(GLFW_KEY_S)) {
+            translateZ += deltaTime * 10;
+        }
+
+        if (window->KeyHold(GLFW_KEY_D)) {
+            translateX += deltaTime * 10;
+        }
+
+        if (window->KeyHold(GLFW_KEY_R)) {
+            translateY += deltaTime * 10;
+        }
+
+        if (window->KeyHold(GLFW_KEY_F)) {
+            translateY -= deltaTime * 10;
+        }
+    }
+
+    // Scale second cube
+    if (window->KeyHold(GLFW_KEY_1)) {
+        scaleX += deltaTime * 10;
+        scaleY += deltaTime * 10;
+        scaleZ += deltaTime * 10;
+    }
+
+    if (window->KeyHold(GLFW_KEY_2)) {
+        scaleX -= deltaTime * 10;
+        scaleY -= deltaTime * 10;
+        scaleZ -= deltaTime * 10;
+    }
+
+    // Rotate third cube
+    if (window->KeyHold(GLFW_KEY_3)) {
+        angularStepOX += deltaTime * 10;
+    }
+
+    if (window->KeyHold(GLFW_KEY_4)) {
+        angularStepOX -= deltaTime * 10;
+    }
+
+    if (window->KeyHold(GLFW_KEY_5)) {
+        angularStepOY += deltaTime * 10;
+    }
+
+    if (window->KeyHold(GLFW_KEY_6)) {
+        angularStepOY -= deltaTime * 10;
+    }
+
+    if (window->KeyHold(GLFW_KEY_7)) {
+        angularStepOZ += deltaTime * 10;
+    }
+
+    if (window->KeyHold(GLFW_KEY_8)) {
+        angularStepOZ -= deltaTime * 10;
+    }
 
 }
 
@@ -138,6 +250,34 @@ void Lab4::OnKeyPress(int key, int mods)
     }
     
     // TODO(student): Add viewport movement and scaling logic
+
+    if (key == GLFW_KEY_I) {
+        miniViewportArea.y += 20;
+    }
+
+    if (key == GLFW_KEY_J) {
+        miniViewportArea.x -= 20;
+    }
+
+    if (key == GLFW_KEY_K) {
+        miniViewportArea.y -= 20;
+    }
+
+    if (key == GLFW_KEY_L) {
+        miniViewportArea.x += 20;
+    }
+
+    if (key == GLFW_KEY_U) {
+        glm::ivec2 resolution = window->GetResolution();
+        miniViewportArea.height -= resolution.y / 20;
+        miniViewportArea.width -= resolution.x / 20;
+    }
+
+    if (key == GLFW_KEY_O) {
+        glm::ivec2 resolution = window->GetResolution();
+        miniViewportArea.height += resolution.y / 20;
+        miniViewportArea.width += resolution.x / 20;
+    }
 }
 
 

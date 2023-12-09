@@ -46,6 +46,8 @@ namespace m1
         float angularStepOX, angularStepOY, angularStepOZ;
         GLenum polygonMode;
         ViewportArea miniViewportArea;
+        float earthAngle, moonAngle;
+        float sunTranslation;
     };
 }   // namespace m1
 
