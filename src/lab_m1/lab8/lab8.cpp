@@ -55,7 +55,8 @@ void Lab8::Init()
 
     // Light & material properties
     {
-        lightPosition = glm::vec3(0, 1, 1);
+        lightPositions[0] = glm::vec3(0, 1, 1);
+        lightPositions[1] = glm::vec3(1, 1, 1);
         lightDirection = glm::vec3(0, -1, 0);
         materialShininess = 30;
         materialKd = 0.5;
@@ -92,7 +93,7 @@ void Lab8::Update(float deltaTimeSeconds)
         modelMatrix = glm::rotate(modelMatrix, RADIANS(60.0f), glm::vec3(1, 0, 0));
         modelMatrix = glm::scale(modelMatrix, glm::vec3(0.5f));
         // TODO(student): Add or change the object colors
-        RenderSimpleMesh(meshes["box"], shaders["LabShader"], modelMatrix);
+        RenderSimpleMesh(meshes["box"], shaders["LabShader"], modelMatrix, light_blue);
 
     }
 
@@ -109,14 +110,20 @@ void Lab8::Update(float deltaTimeSeconds)
         modelMatrix = glm::translate(modelMatrix, glm::vec3(0, 0.01f, 0));
         modelMatrix = glm::scale(modelMatrix, glm::vec3(0.25f));
         // TODO(student): Add or change the object colors
-        RenderSimpleMesh(meshes["plane"], shaders["LabShader"], modelMatrix);
+        RenderSimpleMesh(meshes["plane"], shaders["LabShader"], modelMatrix, dark_grey);
 
     }
 
-    // Render the point light in the scene
+    // Render the point lights in the scene
     {
         glm::mat4 modelMatrix = glm::mat4(1);
-        modelMatrix = glm::translate(modelMatrix, lightPosition);
+        modelMatrix = glm::translate(modelMatrix, lightPositions[0]);
+        modelMatrix = glm::scale(modelMatrix, glm::vec3(0.1f));
+        RenderMesh(meshes["sphere"], shaders["Simple"], modelMatrix);
+
+        // another light
+        modelMatrix = glm::mat4(1);
+        modelMatrix = glm::translate(modelMatrix, lightPositions[1]);
         modelMatrix = glm::scale(modelMatrix, glm::vec3(0.1f));
         RenderMesh(meshes["sphere"], shaders["Simple"], modelMatrix);
     }
@@ -138,8 +145,8 @@ void Lab8::RenderSimpleMesh(Mesh *mesh, Shader *shader, const glm::mat4 & modelM
     glUseProgram(shader->program);
 
     // Set shader uniforms for light properties
-    int light_position = glGetUniformLocation(shader->program, "light_position");
-    glUniform3f(light_position, lightPosition.x, lightPosition.y, lightPosition.z);
+    GLuint light_positions = glGetUniformLocation(shader->program, "light_positions");
+    glUniform3fv(light_positions, 2, glm::value_ptr(lightPositions[0]));
 
     int light_direction = glGetUniformLocation(shader->program, "light_direction");
     glUniform3f(light_direction, lightDirection.x, lightDirection.y, lightDirection.z);
@@ -163,6 +170,11 @@ void Lab8::RenderSimpleMesh(Mesh *mesh, Shader *shader, const glm::mat4 & modelM
     glUniform3f(object_color, color.r, color.g, color.b);
 
     // TODO(student): Set any other shader uniforms that you need
+    int spotlight_pos = glGetUniformLocation(shader->program, "spotlight");
+    glUniform1i(spotlight_pos, spotlight);
+
+    float cut_off_angle_pos = glGetUniformLocation(shader->program, "cut_off_angle");
+    glUniform1f(cut_off_angle_pos, cutOffAngle);
 
     // Bind model matrix
     GLint loc_model_matrix = glGetUniformLocation(shader->program, "Model");
@@ -202,15 +214,20 @@ void Lab8::OnInputUpdate(float deltaTime, int mods)
         forward = glm::normalize(glm::vec3(forward.x, 0, forward.z));
 
         // Control light position using on W, A, S, D, E, Q
-        if (window->KeyHold(GLFW_KEY_W)) lightPosition -= forward * deltaTime * speed;
-        if (window->KeyHold(GLFW_KEY_A)) lightPosition -= right * deltaTime * speed;
-        if (window->KeyHold(GLFW_KEY_S)) lightPosition += forward * deltaTime * speed;
-        if (window->KeyHold(GLFW_KEY_D)) lightPosition += right * deltaTime * speed;
-        if (window->KeyHold(GLFW_KEY_E)) lightPosition += up * deltaTime * speed;
-        if (window->KeyHold(GLFW_KEY_Q)) lightPosition -= up * deltaTime * speed;
+        if (window->KeyHold(GLFW_KEY_W)) lightPositions[0] -= forward * deltaTime * speed;
+        if (window->KeyHold(GLFW_KEY_A)) lightPositions[0] -= right * deltaTime * speed;
+        if (window->KeyHold(GLFW_KEY_S)) lightPositions[0] += forward * deltaTime * speed;
+        if (window->KeyHold(GLFW_KEY_D)) lightPositions[0] += right * deltaTime * speed;
+        if (window->KeyHold(GLFW_KEY_E)) lightPositions[0] += up * deltaTime * speed;
+        if (window->KeyHold(GLFW_KEY_Q)) lightPositions[0] -= up * deltaTime * speed;
 
         // TODO(student): Set any other keys that you might need
-
+        if (window->KeyHold(GLFW_KEY_I)) lightPositions[1] -= forward * deltaTime * speed;
+        if (window->KeyHold(GLFW_KEY_J)) lightPositions[1] -= right * deltaTime * speed;
+        if (window->KeyHold(GLFW_KEY_K)) lightPositions[1] += forward * deltaTime * speed;
+        if (window->KeyHold(GLFW_KEY_L)) lightPositions[1] += right * deltaTime * speed;
+        if (window->KeyHold(GLFW_KEY_O)) lightPositions[1] += up * deltaTime * speed;
+        if (window->KeyHold(GLFW_KEY_U)) lightPositions[1] -= up * deltaTime * speed;
     }
 }
 
@@ -220,6 +237,9 @@ void Lab8::OnKeyPress(int key, int mods)
     // Add key press event
 
     // TODO(student): Set keys that you might need
+    if (key == GLFW_KEY_F) {
+        spotlight = !spotlight;
+    }
 
 }
 

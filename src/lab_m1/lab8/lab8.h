@@ -30,13 +30,20 @@ namespace m1
         void OnMouseScroll(int mouseX, int mouseY, int offsetX, int offsetY) override;
         void OnWindowResize(int width, int height) override;
 
-        glm::vec3 lightPosition;
+        glm::vec3 lightPositions[2];
         glm::vec3 lightDirection;
         unsigned int materialShininess;
         float materialKd;
         float materialKs;
 
         // TODO(student): If you need any other class variables, define them here.
+        // Colors
+        glm::vec3 dark_grey = glm::vec3(0.2f, 0.2f, 0.2f);
+        glm::vec3 light_blue = glm::vec3(0.0f, 0.0f, 1.0f);
+        glm::vec3 light_green = glm::vec3(0.0f, 1.0f, 0.0f);
+
+        bool spotlight = false;
+        float cutOffAngle = 30.0f;
 
     };
 }   // namespace m1
