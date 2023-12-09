@@ -10,3 +10,7 @@
 #include "lab_m1/lab7/lab7.h"
 #include "lab_m1/lab8/lab8.h"
 #include "lab_m1/lab9/lab9.h"
+
+#include "lab_m1/teme/teme_list.h"
+
+#include "lab_m1/basic_text/basic_text.h"
