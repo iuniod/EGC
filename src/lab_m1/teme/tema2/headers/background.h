@@ -22,7 +22,7 @@ namespace m1 {
 
         void Init() override;
 		void Update(float deltaTimeSeconds) override;
-        void RenderMesh(Mesh * mesh, Shader * shader, const glm::mat4 & modelMatrix);
+        void RenderMesh(Mesh * mesh, Shader * shader, const glm::mat4 & modelMatrix, Tank *tank);
 
      private:
         void DrawHUD();
@@ -49,7 +49,10 @@ namespace m1 {
         glm::vec4 groundCoordinates = glm::vec4(-25, -25, 25, 25);
         
         camera::Camera *camera;
+        float cameraAngleOX = 0, cameraAngleOY = 0;
         glm::mat4 cameraMatrix;
         bool thirdPersonCamera = false;
+        GLenum cullFace;
+         GLenum polygonMode;
     };
 }   // namespace m1

@@ -23,9 +23,10 @@ void Tema2::Init() {
     cameraMatrix = perspective(RADIANS(60), window->props.aspectRatio, 0.01f, 200.0f);
     thirdPersonCamera = false;
 
-    // Spawn 20 buildings
-    for (int i = 0; i < 0; i++) {
-        Building* building = new Building(tank->dimensions, tank->position);
+    // Spawn 35 buildings
+    vector<vec2> tankVertices = tank->GetVerticesWithPipe2D();
+    for (int i = 0; i < 35; i++) {
+        Building* building = new Building(tankVertices);
         buildings.push_back(building);
     }
 
@@ -44,7 +45,7 @@ void Tema2::Init() {
 
 void Tema2::Update(float deltaTimeSeconds) {
     // Move tank
-    tank->Move();
+    tank->Move(deltaTimeSeconds, enemies, buildings);
 
     if (!thirdPersonCamera) {
         float sensivityOY = 0.001f;
@@ -68,14 +69,21 @@ void Tema2::Update(float deltaTimeSeconds) {
         tank->bullets.clear();
 
         for (int i = 0; i < enemies.size(); i++) {
-            delete enemies[i];
+            for (int j = 0; j < enemies[i]->bullets.size(); j++) {
+                delete enemies[i]->bullets[j];
+            }
+            enemies[i]->bullets.clear();
         }
-        enemies.clear();
 
         // Still render the background
         Background::Update(deltaTimeSeconds);
         return;
     }
+
+    // Move enemies
+    // for (int i = 0; i < enemies.size(); i++) {
+    //     enemies[i]->Move(deltaTimeSeconds, enemies);
+    // }
 
     // Move bullets and check collision
     for (int i = 0; i < tank->bullets.size(); i++) {
@@ -87,7 +95,18 @@ void Tema2::Update(float deltaTimeSeconds) {
         }
         tank->bullets[i]->Move(deltaTimeSeconds);
 
-        // Check collision with buildings - TODO
+        // Check collision with buildings
+        for (int j = 0; j < buildings.size(); j++) {
+            Building* building = buildings[j];
+            vec2 bulletPosition = vec2(tank->bullets[i]->position.x, tank->bullets[i]->position.z);
+            vector<vec2> buildingVertices = building->GetVertices2D();
+
+            // Check if bullet is in building
+            if (pointInRectangle(bulletPosition, buildingVertices)) {
+                tank->bullets[i]->isAlive = false;
+                continue;
+            }
+        }
 
         // Check collision with enemies
         for (int j = 0; j < enemies.size(); j++) {
@@ -104,7 +123,7 @@ void Tema2::Update(float deltaTimeSeconds) {
                         enemy->isAlive = false;
                         score += 50;
                     }
-                    tank->bullets.erase(tank->bullets.begin() + i, tank->bullets.begin() + i + 1);
+                    tank->bullets[i]->isAlive = false;
                     break;
                 }
             }
@@ -118,7 +137,7 @@ void Tema2::Update(float deltaTimeSeconds) {
             enemies.erase(enemies.begin() + i, enemies.begin() + i + 1);
             continue;
         }
-        enemies[i]->RotateAndShoot(tank, deltaTimeSeconds);
+        enemies[i]->RotateAndShoot(tank, deltaTimeSeconds, buildings);
 
         // Move bullets and check collision
         for (int j = 0; j < enemies[i]->bullets.size(); j++) {
@@ -129,7 +148,18 @@ void Tema2::Update(float deltaTimeSeconds) {
             }
             enemies[i]->bullets[j]->Move(deltaTimeSeconds);
 
-            // Check collision with buildings - TODO
+            // Check collision with buildings
+            for (int k = 0; k < buildings.size(); k++) {
+                Building* building = buildings[k];
+                vec2 bulletPosition = vec2(enemies[i]->bullets[j]->position.x, enemies[i]->bullets[j]->position.z);
+                vector<vec2> buildingVertices = building->GetVertices2D();
+
+                // Check if bullet is in building
+                if (pointInRectangle(bulletPosition, buildingVertices)) {
+                    enemies[i]->bullets[j]->isAlive = false;
+                    break;
+                }
+            }
 
             // Check collision with tank
             if (tank->isAlive && enemies[i]->bullets[j]->isAlive) {
@@ -140,7 +170,7 @@ void Tema2::Update(float deltaTimeSeconds) {
                 // Check if bullet is in tank
                 if (pointInRectangle(bulletPosition, tankVertices)) {
                     tank->lives--;
-                    enemies[i]->bullets.erase(enemies[i]->bullets.begin() + j, enemies[i]->bullets.begin() + j + 1);
+                    enemies[i]->bullets[j]->isAlive = false;
                     break;
                 }
             }
@@ -153,17 +183,19 @@ void Tema2::Update(float deltaTimeSeconds) {
 void Tema2::OnInputUpdate(float deltaTime, int mods) {
     float angleOffset = speed * deltaTime;
 
-    if (window->KeyHold(GLFW_KEY_W)) {
-        tank->MoveFront(deltaTime, speed, groundCoordinates, buildings);
-    }
-    if (window->KeyHold(GLFW_KEY_A)) {
-        tank->RotateLeft(deltaTime, speed, groundCoordinates, buildings);
-    }
-    if (window->KeyHold(GLFW_KEY_S)) {
-        tank->MoveBack(deltaTime, speed, groundCoordinates, buildings);
-    }
-    if (window->KeyHold(GLFW_KEY_D)) {
-        tank->RotateRight(deltaTime, speed, groundCoordinates, buildings);
+    if (!window->MouseHold(GLFW_MOUSE_BUTTON_RIGHT)) {
+        if (window->KeyHold(GLFW_KEY_W)) {
+            tank->MoveFront(deltaTime, speed, groundCoordinates);
+        }
+        if (window->KeyHold(GLFW_KEY_A)) {
+            tank->RotateLeft(deltaTime, speed, groundCoordinates);
+        }
+        if (window->KeyHold(GLFW_KEY_S)) {
+            tank->MoveBack(deltaTime, speed, groundCoordinates);
+        }
+        if (window->KeyHold(GLFW_KEY_D)) {
+            tank->RotateRight(deltaTime, speed, groundCoordinates);
+        }
     }
 }
 
@@ -234,16 +266,8 @@ void Tema2::OnMouseBtnPress(int mouseX, int mouseY, int button, int mods) {
     }
 
     if (IS_BIT_SET(button, GLFW_MOUSE_BUTTON_LEFT) && !gameOver) {
-        // Shoot - add a new bullet
-        float angle = tank->pipe->angle + tank->pipe->angleDirection;
-
-        float x = tank->position.x + sin(angle) * (tank->pipe->radius + 0.3f);
-        float z = tank->position.z + cos(angle) * (tank->pipe->radius + 0.3f);
-        vec3 positionBullet = vec3(x, tank->pipe->peakPosition.y, z);
-
-        vec3 offset = vec3(sin(tank->pipe->angle), 0.0f, cos(tank->pipe->angle)) * 0.459730f;
-        Bullet* bullet = new Bullet(positionBullet, angle, 25, 0.4f, -offset);
-        tank->bullets.push_back(bullet);
+        // Shoot
+        tank->Shoot();
     }
 }
 

@@ -19,29 +19,51 @@ void Background::Init() {
         AddMeshToList(mesh);
     }
 
-    // Load stone cube
+    // Load trees
+    const string sourceTreeDir = PATH_JOIN(window->props.selfDir, SOURCE_PATH::M1, "teme/tema2", "objects/tree");
     {
-        Mesh* mesh = create_object3D::CreateBuilding("stoneCube", vec3(0, 0, 0), 1, 1, 1);
-        AddMeshToList(mesh);
+        Mesh* mesh = new Mesh("tree-1");
+        mesh->LoadMesh(sourceTreeDir, "tree_1.obj");
+        meshes[mesh->GetMeshID()] = mesh;
+
+        mesh = new Mesh("tree-2");
+        mesh->LoadMesh(sourceTreeDir, "tree_2.obj");
+        meshes[mesh->GetMeshID()] = mesh;
+
+        mesh = new Mesh("tree-3");
+        mesh->LoadMesh(sourceTreeDir, "tree_3.obj");
+        meshes[mesh->GetMeshID()] = mesh;
     }
 
     // Load tank parts
-    const string sourceObjectDir = PATH_JOIN(window->props.selfDir, SOURCE_PATH::M1, "teme/tema2", "objects");
+    const string sourceTanktDir = PATH_JOIN(window->props.selfDir, SOURCE_PATH::M1, "teme/tema2", "objects/tank");
     {
         Mesh* mesh = new Mesh("baza");
-        mesh->LoadMesh(sourceObjectDir, "baza.obj");
+        mesh->LoadMesh(sourceTanktDir, "baza.obj");
         meshes[mesh->GetMeshID()] = mesh;
 
         mesh = new Mesh("sine");
-        mesh->LoadMesh(sourceObjectDir, "sine.obj");
+        mesh->LoadMesh(sourceTanktDir, "sine.obj");
         meshes[mesh->GetMeshID()] = mesh;
 
         mesh = new Mesh("teava");
-        mesh->LoadMesh(sourceObjectDir, "teava.obj");
+        mesh->LoadMesh(sourceTanktDir, "teava.obj");
         meshes[mesh->GetMeshID()] = mesh;
 
         mesh = new Mesh("turela");
-        mesh->LoadMesh(sourceObjectDir, "turela.obj");
+        mesh->LoadMesh(sourceTanktDir, "turela.obj");
+        meshes[mesh->GetMeshID()] = mesh;
+    }
+
+    // Load enemy parts
+    const string sourceEnemyDir = PATH_JOIN(window->props.selfDir, SOURCE_PATH::M1, "teme/tema2", "objects/enemy");
+    {
+        Mesh* mesh = new Mesh("bazaEnemy");
+        mesh->LoadMesh(sourceEnemyDir, "baza.obj");
+        meshes[mesh->GetMeshID()] = mesh;
+
+        mesh = new Mesh("turelaEnemy");
+        mesh->LoadMesh(sourceEnemyDir, "turela.obj");
         meshes[mesh->GetMeshID()] = mesh;
     }
 
@@ -52,30 +74,23 @@ void Background::Init() {
         meshes[mesh->GetMeshID()] = mesh;
     }
 
-    // Load house
-    {
-        Mesh* mesh = new Mesh("house");
-        mesh->LoadMesh(PATH_JOIN(window->props.selfDir, SOURCE_PATH::M1, "teme/tema2", "objects/wood_house"), "woodhouse.obj");
-        meshes[mesh->GetMeshID()] = mesh;
-    }
-
     // Create shader programs
     {
-        Shader *shader = new Shader("HwShader");
+        Shader *shader = new Shader("NormalShader");
         shader->AddShader(PATH_JOIN(window->props.selfDir, SOURCE_PATH::M1, "teme/tema2", "shaders", "VertexShader.glsl"), GL_VERTEX_SHADER);
         shader->AddShader(PATH_JOIN(window->props.selfDir, SOURCE_PATH::M1, "teme/tema2", "shaders", "FragmentShader.glsl"), GL_FRAGMENT_SHADER);
         shader->CreateAndLink();
         shaders[shader->GetName()] = shader;
 
         shader = new Shader("TankShader");
-        shader->AddShader(PATH_JOIN(window->props.selfDir, SOURCE_PATH::M1, "teme/tema2", "shaders", "TankShader.glsl"), GL_VERTEX_SHADER);
+        shader->AddShader(PATH_JOIN(window->props.selfDir, SOURCE_PATH::M1, "teme/tema2", "shaders", "VertexTank.glsl"), GL_VERTEX_SHADER);
         shader->AddShader(PATH_JOIN(window->props.selfDir, SOURCE_PATH::M1, "teme/tema2", "shaders", "FragmentTank.glsl"), GL_FRAGMENT_SHADER);
         shader->CreateAndLink();
         shaders[shader->GetName()] = shader;
 
-        shader = new Shader("HouseShader");
-        shader->AddShader(PATH_JOIN(window->props.selfDir, SOURCE_PATH::M1, "teme/tema2", "shaders", "VertexHouse.glsl"), GL_VERTEX_SHADER);
-        shader->AddShader(PATH_JOIN(window->props.selfDir, SOURCE_PATH::M1, "teme/tema2", "shaders", "FragmentHouse.glsl"), GL_FRAGMENT_SHADER);
+        shader = new Shader("EnemyShader");
+        shader->AddShader(PATH_JOIN(window->props.selfDir, SOURCE_PATH::M1, "teme/tema2", "shaders", "VertexEnemy.glsl"), GL_VERTEX_SHADER);
+        shader->AddShader(PATH_JOIN(window->props.selfDir, SOURCE_PATH::M1, "teme/tema2", "shaders", "FragmentEnemy.glsl"), GL_FRAGMENT_SHADER);
         shader->CreateAndLink();
         shaders[shader->GetName()] = shader;
     }
@@ -102,25 +117,6 @@ void Background::Init() {
         mapTextures["bulletTexture"] = texture;
     }
 
-    // Load tank textures
-    {
-        Texture2D* texture = new Texture2D();
-        texture->Load2D(PATH_JOIN(sourceTextureDir, "pink.jpg").c_str(), GL_REPEAT);
-        mapTextures["bazaTexture"] = texture;
-
-        texture = new Texture2D();
-        texture->Load2D(PATH_JOIN(sourceTextureDir, "black.jpg").c_str(), GL_REPEAT);
-        mapTextures["sineTexture"] = texture;
-
-        texture = new Texture2D();
-        texture->Load2D(PATH_JOIN(sourceTextureDir, "black.jpg").c_str(), GL_REPEAT);
-        mapTextures["teavaTexture"] = texture;
-
-        texture = new Texture2D();
-        texture->Load2D(PATH_JOIN(sourceTextureDir, "pink.jpg").c_str(), GL_REPEAT);
-        mapTextures["turelaTexture"] = texture;
-    }
-
     // Load text
     {
         ivec2 resolution = window->GetResolution();
@@ -130,6 +126,7 @@ void Background::Init() {
         bigText = new gfxc::TextRenderer(window->props.selfDir, resolution.x, resolution.y);
         bigText->Load(PATH_JOIN(window->props.selfDir, RESOURCE_PATH::FONTS, "Hack-Bold.ttf"), 72);
     }
+
 }
 
 void Background::FrameStart() {
@@ -143,10 +140,13 @@ void Background::FrameStart() {
 }
 
 void Background::Update(float deltaTimeSeconds) {
+    // Render just the faces that are not turned away from the camera
+    // glEnable(GL_CULL_FACE);
+
     // Render bullets
     for (int i = 0; i < tank->bullets.size(); i++) {
         Bullet* bullet = tank->bullets[i];
-        RenderShaderMesh(meshes["sphere"], shaders["HwShader"], bullet->modelMatrix, mapTextures["bulletTexture"]);
+        RenderShaderMesh(meshes["sphere"], shaders["NormalShader"], bullet->modelMatrix, mapTextures["bulletTexture"]);
     }
 
     // Render enemies bullets
@@ -154,42 +154,34 @@ void Background::Update(float deltaTimeSeconds) {
         Tank* enemy = enemies[i];
         for (int j = 0; j < enemy->bullets.size(); j++) {
             Bullet* bullet = enemy->bullets[j];
-            RenderShaderMesh(meshes["sphere"], shaders["HwShader"], bullet->modelMatrix, mapTextures["bulletTexture"]);
+            RenderShaderMesh(meshes["sphere"], shaders["NormalShader"], bullet->modelMatrix, mapTextures["bulletTexture"]);
         }
     }
 
     // Render tank
     {
-        RenderMesh(meshes["baza"], shaders["TankShader"], tank->modelMatrix);
-        RenderMesh(meshes["sine"], shaders["TankShader"], tank->modelMatrix);
-        RenderMesh(meshes["teava"], shaders["TankShader"], tank->pipe->modelMatrix);
-        RenderMesh(meshes["turela"], shaders["TankShader"], tank->turela->modelMatrix);
+        RenderMesh(meshes["baza"], shaders["TankShader"], tank->modelMatrix, NULL);
+        RenderMesh(meshes["sine"], shaders["TankShader"], tank->modelMatrix, NULL);
+        RenderMesh(meshes["teava"], shaders["TankShader"], tank->pipe->modelMatrix, NULL);
+        RenderMesh(meshes["turela"], shaders["TankShader"], tank->turela->modelMatrix, NULL);
     }
 
     // Render enemies
     for (int i = 0; i < enemies.size(); i++) {
         Tank* enemy = enemies[i];
         if (enemy->isAlive) {
-            RenderMesh(meshes["baza"], shaders["TankShader"], enemy->modelMatrix);
-            RenderMesh(meshes["sine"], shaders["TankShader"], enemy->modelMatrix);
-            RenderMesh(meshes["teava"], shaders["TankShader"], enemy->pipe->modelMatrix);
-            RenderMesh(meshes["turela"], shaders["TankShader"], enemy->turela->modelMatrix);
+            RenderMesh(meshes["bazaEnemy"], shaders["EnemyShader"], enemy->modelMatrix, enemy);
+            RenderMesh(meshes["sine"], shaders["EnemyShader"], enemy->modelMatrix, enemy);
+            RenderMesh(meshes["teava"], shaders["EnemyShader"], enemy->pipe->modelMatrix, enemy);
+            RenderMesh(meshes["turelaEnemy"], shaders["EnemyShader"], enemy->turela->modelMatrix, enemy);
         }
     }
 
-    // Render buildings
+    // Render trees
     for (int i = 0; i < buildings.size(); i++) {
         Building* building = buildings[i];
-
-        for (float x = - building->dimensions.x / 2.0f; x < building->dimensions.x / 2.0f; x = x + 1.0f) {
-            for (float y = - building->dimensions.y / 2.0f; y < building->dimensions.y / 2.0f; y = y + 1.0f) {
-                for (float z = - building->dimensions.z / 2.0f; z < building->dimensions.z / 2.0f; z = z + 1.0f) {
-                    mat4 modelMatrix = building->modelMatrix;
-                    modelMatrix = translate(modelMatrix, vec3(x, y, z));
-                    RenderShaderMesh(meshes["stoneCube"], shaders["HwShader"], modelMatrix, mapTextures["stoneTexture"]);
-                }
-            }
-        }
+        mat4 modelMatrix = translate(mat4(1), building->position);
+        RenderMesh(meshes["tree-" + to_string(building->buildingType)], shaders["NormalShader"], modelMatrix, NULL);
     }
 
     // Render ground
@@ -198,7 +190,7 @@ void Background::Update(float deltaTimeSeconds) {
         for (int offset_x = -25; offset_x < 25; offset_x++) {
             for (int offset_z = -25; offset_z < 25; offset_z++) {
                 modelMatrix = translate(mat4(1), vec3(offset_x, 0, offset_z));
-                RenderShaderMesh(meshes["ground"], shaders["HwShader"], modelMatrix, mapTextures["grassTexture"]);
+                RenderShaderMesh(meshes["ground"], shaders["NormalShader"], modelMatrix, mapTextures["grassTexture"]);
             }
         }
     }
@@ -280,7 +272,7 @@ void Background::RenderShaderMesh(Mesh *mesh, Shader *shader, const mat4 & model
     glDrawElements(mesh->GetDrawMode(), static_cast<int>(mesh->indices.size()), GL_UNSIGNED_INT, 0);
 }
 
-void Background::RenderMesh(Mesh * mesh, Shader * shader, const mat4 & modelMatrix) {
+void Background::RenderMesh(Mesh * mesh, Shader * shader, const mat4 & modelMatrix, Tank* tank) {
     if (!mesh  || !shader || !shader->program)
         return;
 
@@ -289,6 +281,12 @@ void Background::RenderMesh(Mesh * mesh, Shader * shader, const mat4 & modelMatr
     glUniformMatrix4fv(shader->loc_view_matrix, 1, GL_FALSE, value_ptr(camera->GetViewMatrix()));
     glUniformMatrix4fv(shader->loc_projection_matrix, 1, GL_FALSE, value_ptr(cameraMatrix));
     glUniformMatrix4fv(shader->loc_model_matrix, 1, GL_FALSE, value_ptr(modelMatrix));
+
+    // If mesh is enemy, add hp uniform
+    if (tank != NULL) {
+        float hp = tank->lives / 3.0f;
+        glUniform1f(glGetUniformLocation(shader->program, "hp"), hp);
+    }
 
     mesh->Render();
 }

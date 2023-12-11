@@ -1,0 +1,11 @@
+# Blender 4.0.1 MTL File: 'sine.blend'
+# www.blender.org
+
+newmtl Sci-Fi_Panel
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+illum 2
+map_Kd black_rusty_plate_with_rivets_Base_Color.jpg
+

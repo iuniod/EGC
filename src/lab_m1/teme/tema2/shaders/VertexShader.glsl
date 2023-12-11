@@ -10,6 +10,7 @@ layout(location = 3) in vec3 v_color;
 uniform mat4 Model;
 uniform mat4 View;
 uniform mat4 Projection;
+uniform float hp;
 
 // Output
 out vec2 texcoord;

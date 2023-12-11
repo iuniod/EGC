@@ -1,0 +1,20 @@
+# Blender 4.0.1 MTL File: 'tree_3.blend'
+# www.blender.org
+
+newmtl Leaves
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd hedge_diffuse.png
+
+newmtl Tree_Bark.001
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.330000
+d 1.000000
+illum 2
+map_Kd bark02_BaseColor.png
