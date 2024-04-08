@@ -38,5 +38,6 @@ namespace m1
 
         bool is_mix = false;
         bool is_time = false;
+        bool is_heightmap = false;
     };
 }   // namespace m1

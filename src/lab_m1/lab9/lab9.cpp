@@ -31,6 +31,11 @@ void Lab9::Init()
     // Load textures
     {
         Texture2D* texture = new Texture2D();
+        texture->Load2D(PATH_JOIN(sourceTextureDir, "heightmap.png").c_str(), GL_REPEAT);
+        mapTextures["heightmap"] = texture;
+    }
+    {
+        Texture2D* texture = new Texture2D();
         texture->Load2D(PATH_JOIN(sourceTextureDir, "grass_bilboard.png").c_str(), GL_REPEAT);
         mapTextures["grass"] = texture;
     }
@@ -54,10 +59,15 @@ void Lab9::Init()
     }
 
     {
-        mapTextures["random"] = CreateRandomTexture(25, 25);
+        mapTextures["random"] = CreateRandomTexture(100, 100);
     }
 
     // Load meshes
+    {
+        Mesh* mesh = new Mesh("terrain");
+        mesh->LoadMesh(PATH_JOIN(window->props.selfDir, RESOURCE_PATH::MODELS, "primitives"), "plane50.obj");
+        meshes[mesh->GetMeshID()] = mesh;
+    }
     {
         Mesh* mesh = new Mesh("box");
         mesh->LoadMesh(PATH_JOIN(window->props.selfDir, RESOURCE_PATH::MODELS, "primitives"), "box.obj");
@@ -150,6 +160,13 @@ void Lab9::Update(float deltaTimeSeconds)
     // you are only passing the second texture for a single object!
     // Why does this happen? How can you solve it?
     {
+        is_heightmap = true;
+        glm::mat4 modelMatrix = glm::mat4(1);
+        modelMatrix = glm::translate(modelMatrix, glm::vec3(0, 1.5f, 0));
+        RenderSimpleMesh(meshes["terrain"], shaders["LabShader"], modelMatrix, mapTextures["heightmap"]);
+        is_heightmap = false;
+    }
+    {
         is_time = true;
         glm::mat4 modelMatrix = glm::mat4(1);
         modelMatrix = glm::translate(modelMatrix, glm::vec3(1, 1, -3));
@@ -225,6 +242,9 @@ void Lab9::RenderSimpleMesh(Mesh* mesh, Shader* shader, const glm::mat4& modelMa
 
     float time = Engine::GetElapsedTime();
     glUniform1f(glGetUniformLocation(shader->program, "time"), time);
+
+    GLint loc_model_matrix_plane = glGetUniformLocation(shader->program, "is_heightmap");
+    glUniform1f(glGetUniformLocation(shader->program, "is_heightmap"), is_heightmap);
     
     if (texture1)
     {
@@ -262,9 +282,16 @@ Texture2D* Lab9::CreateRandomTexture(unsigned int width, unsigned int height)
     unsigned int size = width * height * channels;
     unsigned char* data = new unsigned char[size];
 
-    // TODO(student): Generate random texture data
-    for (int i = 0; i < size; i++) {
-        data[i] = rand() % 256;
+    // TODO(student): Generate random texture data for each line
+    for (unsigned int i = 0; i < width; ++i) {
+        char r = rand() % 256;
+        char g = rand() % 256;
+        char b = rand() % 256;
+        for (unsigned int j = 0; j < height; ++j) {
+            data[i * width * channels + j * channels + 0] = r;
+            data[i * width * channels + j * channels + 1] = g;
+            data[i * width * channels + j * channels + 2] = b;
+        }
     }
 
     // TODO(student): Generate and bind the new texture ID
